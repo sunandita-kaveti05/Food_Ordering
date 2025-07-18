@@ -111,6 +111,33 @@ scores = similarity.sum(axis=1)
    ```
 
 ---
+---
+
+## 🌍 Deployment
+
+The app is deployed using **Render** and can be made live when required.
+
+🔗 **Live URL (on-demand)**:  
+👉 [https://foodorderingapp-9ojb.onrender.com](https://foodorderingapp-9ojb.onrender.com)
+
+⚙️ **Hosting Stack**:  
+* Platform: [Render](https://render.com) – Free web service for auto-deploying Django apps from GitHub
+* WSGI Server: `gunicorn`
+* Static files served using: `WhiteNoise`
+* Secrets/Env Vars handled via: `python-decouple`
+
+🛑 **Deployment is controlled manually**  
+The service remains *off* until explicitly enabled. You can toggle it using the Render dashboard:
+
+1. Go to [Render Dashboard](https://dashboard.render.com)
+2. Find the service: `foodorderingapp-9ojb`
+3. Use the "Suspend/Resume" button to control availability
+
+This helps save resources and avoid unnecessary usage when not testing or demoing.
+
+---
+
+
 
 ## 👩‍💻 Author
 
