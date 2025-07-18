@@ -112,12 +112,6 @@ scores = similarity.sum(axis=1)
 
 ---
 
-## 📸 Screenshots (Optional)
-
-*Add minimal UI screenshots like Home Page, Cart, Order History.*
-
----
-
 ## 👩‍💻 Author
 
 **Sunandita Kaveti**
