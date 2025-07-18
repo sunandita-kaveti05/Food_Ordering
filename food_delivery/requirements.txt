@@ -15,3 +15,5 @@ whitenoise>=6.5.0
 
 # Optional: if using environment variable management
 python-decouple>=3.8
+
+djangorestframework>=3.14.0
