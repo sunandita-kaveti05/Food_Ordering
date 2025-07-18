@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Your Cart</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 40px;
+      background-color: #f9f9f9;
+    }
+    .cart-container {
+      background-color: white;
+      padding: 30px;
+      border-radius: 10px;
+      max-width: 1000px;
+      margin: auto;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 30px;
+      justify-content: center;
+    }
+    .cart-section, .recommendations-section {
+      flex: 1;
+      min-width: 300px;
+      padding: 15px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+    }
+    th, td {
+      padding: 10px;
+      text-align: left;
+      border-bottom: 1px solid #eee;
+    }
+    th {
+      background-color: #0077cc;
+      color: white;
+    }
+    tr:nth-child(even) {
+      background-color: #f5f5f5;
+    }
+    .total {
+      font-weight: bold;
+      text-align: right;
+      margin-top: 20px;
+      font-size: 1.2em;
+    }
+    .remove-btn {
+      background: none;
+      color: #d9534f;
+      border: none;
+      cursor: pointer;
+      font-size: 1.2em;
+    }
+    .order-btn {
+      background-color: #28a745;
+      color: white;
+      padding: 12px 25px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-top: 15px;
+      font-size: 1.1em;
+      transition: background-color 0.3s ease;
+    }
+    .order-btn:hover {
+      background-color: #218838;
+    }
+    .recommendations-section h2 {
+      font-size: 1.6em;
+      color: #333;
+      margin-bottom: 20px;
+      text-align: center;
+      border-bottom: 2px solid #0077cc;
+      padding-bottom: 10px;
+    }
+    .recommendation-card {
+      background-color: #fff;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 15px;
+      text-align: center;
+      margin-bottom: 15px;
+    }
+    .recommendation-card h5 {
+      margin: 0;
+      font-size: 1.1em;
+    }
+    .recommendation-card p {
+      margin: 5px 0;
+      font-size: 0.9em;
+    }
+    .add-btn {
+      background-color: #0077cc;
+      color: white;
+      padding: 8px 15px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 0.9em;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="cart-container">
+    <div class="cart-section">
+      <h2>Your Cart</h2>
+      <table id="cart-table">
+        <thead>
+          <tr>
+            <th>Item</th>
+            <th>Qty</th>
+            <th>Price</th>
+          </tr>
+        </thead>
+        <tbody id="cart-body">
+          {% for item in cart_items %}
+          <tr id="cart-item-{{ item.food_item.id }}">
+  <td>
+    <strong>{{ item.food_item.name }}</strong><br>
+    <small style="color: #888;">{{ item.food_item.restaurant.name }}</small>
+  </td>
+  <td style="text-align: center;">
+    <form method="post" action="{% url 'update_cart_item' item.id %}" style="display: inline-block; margin: 0 5px;">
+      {% csrf_token %}
+      <button name="action" value="decrease" style="border:none; background:none; cursor: pointer; font-size: 1.2em;">➖</button>
+    </form>
+    <span>{{ item.quantity }}</span>
+    <form method="post" action="{% url 'update_cart_item' item.id %}" style="display: inline-block; margin: 0 5px;">
+      {% csrf_token %}
+      <button name="action" value="increase" style="border:none; background:none; cursor: pointer; font-size: 1.2em;">➕</button>
+    </form>
+  </td>
+  <td class="price">₹{{ item.total_price }}</td>
+</tr>
+
+          {% endfor %}
+        </tbody>
+      </table>
+
+      <p class="total" id="total-price">Total: ₹{{ total_price }}</p>
+
+      <form action="{% url 'place_order' %}" method="post">
+        {% csrf_token %}
+        <button type="submit" class="order-btn">Place Order</button>
+      </form>
+
+      <p style="margin-top: 20px;"><a href="{% url 'home' %}">← Back to Home</a></p>
+    </div>
+
+    {% if recommended_items %}
+<div class="recommendations-section">
+  <h2>🍴 Recommended for You:</h2>
+  {% for item in recommended_items %}
+  <div class="recommendation-card" id="recommendation-{{ item.id }}">
+    <h5>{{ item.name }}</h5>
+    <p><small style="color: gray;">{{ item.restaurant.name }}</small></p>
+    <p>₹{{ item.price }} | {{ item.category }}</p>
+    <button class="add-btn"
+      onclick="addToCartAjax('{{ item.id }}', '{{ item.name|escapejs }}', '{{ item.price|floatformat:2 }}', '{{ item.category|escapejs }}')">
+      Add
+    </button>
+  </div>
+  {% endfor %}
+</div>
+
+{% endif %}
+
+
+  <input type="hidden" id="csrf-token" value="{{ csrf_token }}">
+
+  <script>
+    function getCSRFToken() {
+      const input = document.getElementById('csrf-token');
+      return input ? input.value : '';
+    }
+
+    function updateCartCount() {
+      fetch('/cart/count/')
+        .then(res => res.json())
+        .then(data => {
+          const el = document.getElementById("cart-count");
+          if (el) el.innerText = data.count;
+        });
+    }
+
+    function formatPrice(price) {
+      return "₹" + parseFloat(price).toFixed(2);
+    }
+
+    function addToCartAjax(id, name, price, category) {
+      fetch(`/ajax/add-to-cart/${id}/`, {
+        method: "POST",
+        headers: {
+          "X-CSRFToken": getCSRFToken(),
+          "Content-Type": "application/json"
+        }
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          // Append to cart table
+          const row = document.createElement('tr');
+row.id = `cart-item-${id}`;
+row.innerHTML = `
+  <td>
+    <strong>${name}</strong><br>
+    <small style="color:#888;">${data.restaurant}</small>
+  </td>
+  <td style="text-align: center;">
+    <form method="post" action="/update-cart-item/${data.cart_item_id}/" style="display:inline-block; margin: 0 5px;">
+      <input type="hidden" name="csrfmiddlewaretoken" value="${getCSRFToken()}">
+      <button name="action" value="decrease" style="border:none; background:none; cursor:pointer; font-size: 1.2em;">➖</button>
+    </form>
+    <span>1</span>
+    <form method="post" action="/update-cart-item/${data.cart_item_id}/" style="display:inline-block; margin: 0 5px;">
+      <input type="hidden" name="csrfmiddlewaretoken" value="${getCSRFToken()}">
+      <button name="action" value="increase" style="border:none; background:none; cursor:pointer; font-size: 1.2em;">➕</button>
+    </form>
+  </td>
+  <td class="price">${formatPrice(price)}</td>
+`;
+document.getElementById("cart-body").appendChild(row);
+
+
+          // Update total price
+          const currentTotal = parseFloat(document.getElementById("total-price").innerText.replace(/[^\d.]/g, '')) || 0;
+          const newTotal = currentTotal + parseFloat(data.unit_price);
+          document.getElementById("total-price").innerText = "Total: ₹" + newTotal.toFixed(2);
+
+          // Update cart count
+          updateCartCount();
+
+          // Remove from recommendations
+          const card = document.getElementById(`recommendation-${id}`);
+          if (card) card.remove();
+
+          // Reload recommendations dynamically
+          loadRecommendations();
+        } else {
+          alert("Failed to add item.");
+        }
+      })
+      .catch(() => alert("Error adding item."));
+    }
+
+    function loadRecommendations() {
+      fetch('/ajax/recommendations/')
+        .then(response => response.json())
+        .then(data => {
+          const recDiv = document.getElementById("recommendations");
+          recDiv.innerHTML = '<h2>🍴 Recommended for You:</h2>';
+          data.recommendations.forEach(item => {
+            const card = document.createElement("div");
+            card.className = "recommendation-card";
+            card.id = `recommendation-${item.id}`;
+            card.innerHTML = `
+              <h5>${item.name}</h5>
+              <p>₹${parseFloat(item.price).toFixed(2)} | ${item.category}</p>
+              <button class="add-btn" onclick="addToCartAjax('${item.id}', '${item.name}', '${item.price}', '${item.category}')">
+                Add
+              </button>
+            `;
+            recDiv.appendChild(card);
+          });
+        });
+    }
+
+    document.addEventListener("DOMContentLoaded", loadRecommendations);
+  </script>
+</body>
+</html>

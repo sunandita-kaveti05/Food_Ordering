@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Your Orders</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 40px;
+            background-color: #f5f5f5;
+        }
+
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            max-width: 800px;
+            margin: auto;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        h2 {
+            margin-bottom: 20px;
+        }
+
+        .order {
+            border-bottom: 1px solid #ddd;
+            padding: 15px 0;
+        }
+
+        .order:last-child {
+            border-bottom: none;
+        }
+
+        .order strong {
+            color: #0077cc;
+        }
+
+        ul {
+            margin-top: 10px;
+            padding-left: 20px;
+        }
+
+        li {
+            margin-bottom: 4px;
+        }
+
+        a {
+            display: inline-block;
+            margin-top: 20px;
+            text-decoration: none;
+            color: #0077cc;
+        }
+        .star-rating {
+  display: inline-block;
+  margin-left: 10px;
+}
+
+.star {
+  font-size: 1.3em;
+  color: #ccc;
+  cursor: pointer;
+  transition: color 0.3s ease;
+}
+
+.star:hover,
+.star.hovered,
+.star.selected {
+  color: #f39c12;
+}
+
+.rated-stars {
+  color: #f39c12;
+  margin-left: 10px;
+  font-weight: bold;
+}
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>🧾 Your Order History</h2>
+
+        {% if orders %}
+            {% for order in orders %}
+                <div class="order">
+                    <strong>Order #{{ order.id }}</strong> | {{ order.created_at|date:"d M Y, h:i A" }}
+                    <ul>
+{% for item in order.items.all %}
+  <li>
+    {{ item.food_item.name }} × {{ item.quantity }} – ₹{{ item.total_price }}
+
+    {% if item.rating %}
+      <span class="rated-stars">⭐ {{ item.rating }}/5</span>
+    {% else %}
+      <div class="star-rating" data-item-id="{{ item.id }}">
+        {% for i in "12345" %}
+          <span class="star" data-value="{{ i }}">&#9733;</span>
+        {% endfor %}
+      </div>
+    {% endif %}
+  </li>
+{% endfor %}
+</ul>
+
+
+                </div>
+            {% endfor %}
+        {% else %}
+            <p>You haven't placed any orders yet.</p>
+        {% endif %}
+
+        <a href="{% url 'home' %}">← Back to Home</a>
+    </div>
+    <input type="hidden" id="csrf-token" value="{{ csrf_token }}">
+
+</body>
+<script>
+  const csrfToken = document.getElementById('csrf-token')?.value;
+
+  document.querySelectorAll('.star-rating').forEach(ratingDiv => {
+    const itemId = ratingDiv.dataset.itemId;
+
+    ratingDiv.querySelectorAll('.star').forEach(star => {
+      const value = parseInt(star.dataset.value);
+
+      // Hover effect
+      star.addEventListener('mouseenter', () => {
+        ratingDiv.querySelectorAll('.star').forEach(s => {
+          if (parseInt(s.dataset.value) <= value) {
+            s.classList.add('hovered');
+          } else {
+            s.classList.remove('hovered');
+          }
+        });
+      });
+
+      // Remove hover effect
+      star.addEventListener('mouseleave', () => {
+        ratingDiv.querySelectorAll('.star').forEach(s => s.classList.remove('hovered'));
+      });
+
+      // Click to rate
+      star.addEventListener('click', () => {
+        fetch(`/rate-order-item/${itemId}/`, {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': csrfToken,
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: `rating=${value}`
+        }).then(response => {
+          if (response.ok) {
+            ratingDiv.innerHTML = `<span class="rated-stars">⭐ ${value}/5</span>`;
+          } else {
+            alert("Error submitting rating.");
+          }
+        });
+      });
+    });
+  });
+</script>
+
+</html>

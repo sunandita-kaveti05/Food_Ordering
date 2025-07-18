@@ -1,0 +1,17 @@
+# Core Django framework
+Django>=4.2,<5.0
+
+# Image handling for restaurant & food item images
+pillow>=9.5.0
+
+# Data processing & recommendation engine
+numpy>=1.25.0
+pandas>=2.0.0
+scikit-learn>=1.2.2
+
+# For secure deployment (optional but recommended)
+gunicorn>=21.2.0
+whitenoise>=6.5.0
+
+# Optional: if using environment variable management
+python-decouple>=3.8

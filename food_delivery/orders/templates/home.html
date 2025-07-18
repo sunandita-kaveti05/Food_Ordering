@@ -1,0 +1,634 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+
+  <title>Home | Online Food Ordering</title>
+  <style>
+  :root {
+    --primary: #0077cc;
+    --primary-hover: #005fa3;
+    --bg-light: #f4f8fb;
+    --bg-white: #ffffff;
+    --text-dark: #2c3e50;
+    --card-hover: #e8f4fc;
+    --accent: #28a745;
+    --danger: #d9534f;
+  }
+
+  body {
+    font-family: 'Segoe UI', sans-serif;
+    padding: 40px;
+    background: linear-gradient(to right, #f4f8fb, #e9f2f9);
+    color: var(--text-dark);
+  }
+
+  a {
+    margin: 0 10px;
+    text-decoration: none;
+    color: var(--primary);
+    transition: color 0.3s ease;
+  }
+
+  a:hover {
+    color: var(--primary-hover);
+  }
+
+  .header {
+    background-color: var(--bg-white);
+    padding: 20px;
+    border-radius: 16px;
+    margin-bottom: 30px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+  }
+
+  .user-info {
+    text-align: right;
+    font-size: 0.95em;
+    margin-bottom: 10px;
+  }
+
+  h1 {
+    font-size: 2em;
+    margin-bottom: 6px;
+  }
+
+  .main-content {
+    background-color: var(--bg-white);
+    padding: 30px;
+    border-radius: 16px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+  }
+
+  .search-filter form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  input[type="text"], select {
+    padding: 10px 14px;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    font-size: 0.95em;
+    flex: 1 1 200px;
+    transition: border-color 0.3s ease;
+  }
+
+  input[type="text"]:focus, select:focus {
+    border-color: var(--primary);
+    outline: none;
+  }
+
+  button {
+    background-color: var(--primary);
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    font-weight: 500;
+  }
+
+  button:hover {
+    background-color: var(--primary-hover);
+  }
+
+  .card-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    margin-top: 20px;
+  }
+
+  .restaurant-card {
+    flex: 1 1 calc(33.33% - 20px);
+    background-color: var(--bg-white);
+    padding: 20px;
+    border-radius: 14px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  .restaurant-card:hover {
+    background-color: var(--card-hover);
+    transform: translateY(-4px);
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.1);
+  }
+
+  .add-btn {
+    background-color: var(--accent);
+    padding: 6px 12px;
+    font-size: 0.9em;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+
+  .add-btn:disabled {
+    background-color: #aaa;
+    cursor: not-allowed;
+  }
+
+  .highlighted {
+    font-weight: bold;
+    background-color: yellow;
+    padding: 2px 4px;
+    border-radius: 4px;
+  }
+
+  #toast {
+    position: fixed;
+    top: 20px;
+    right: -400px;
+    background: var(--accent);
+    color: white;
+    padding: 15px 20px;
+    border-radius: 8px;
+    box-shadow: 0 6px 16px rgba(0,0,0,0.2);
+    font-weight: bold;
+    transition: all 0.5s ease;
+    z-index: 9999;
+  }
+
+  /* 🔒 Unified Modal Styling for Login & Signup */
+  .modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.4);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+  }
+
+  .modal-content {
+    background: #fff;
+    padding: 30px 28px;
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    width: 90%;
+    max-width: 400px;
+    position: relative;
+    animation: fadeIn 0.3s ease;
+  }
+
+  .modal-content h2 {
+    text-align: center;
+    font-size: 1.8em;
+    color: #2c3e50;
+    font-weight: 600;
+    margin-bottom: 24px;
+  }
+
+  .modal-content form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+ .modal-content form input {
+  padding: 10px 14px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 1em;
+  width: 100%;
+  box-sizing: border-box;
+  line-height: 1.4;
+  height: 44px;                /* ✅ Force consistent height */
+  resize: none;
+  flex: none;                  /* ✅ Override inherited flex */
+}
+
+
+
+  .modal-content form input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 4px rgba(0, 119, 204, 0.3);
+    outline: none;
+  }
+
+  .modal-content form button {
+    background-color: var(--primary);
+    color: white;
+    padding: 12px 16px;
+    border: none;
+    border-radius: 8px;
+    font-size: 1em;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+
+  .modal-content form button:hover {
+    background-color: var(--primary-hover);
+  }
+
+  .close {
+    position: absolute;
+    top: 14px;
+    right: 20px;
+    font-size: 22px;
+    color: #999;
+    cursor: pointer;
+    transition: color 0.3s ease;
+  }
+
+  .close:hover {
+    color: #000;
+  }
+
+  #login-error, #signup-error {
+    color: var(--danger);
+    font-size: 0.95em;
+    text-align: center;
+    margin-top: 8px;
+  }
+
+  @keyframes fadeIn {
+    from { transform: scale(0.95); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+
+  @media (max-width: 768px) {
+    .restaurant-card {
+      flex: 1 1 100%;
+    }
+  }
+  .password-wrapper {
+  position: relative;
+}
+
+.toggle-password {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  color: #888;
+  font-size: 1.1em;
+}
+
+.toggle-password:hover {
+  color: var(--primary);
+}
+
+.error-text {
+  color: var(--danger);
+  font-size: 0.95em;
+  margin-top: 8px;
+  text-align: center;
+}
+
+</style>
+
+
+</head>
+<body>
+  <div class="header">
+    <div class="user-info">
+      {% if user.is_authenticated %}
+        Welcome, {{ user.username }} |
+        <a href="{% url 'view_cart' %}" style="background-color: #0077cc; color: white; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-weight: bold;">
+          🛒 View Cart (<span id="cart-count">{{ cart_item_count|default:0 }}</span>)
+        </a>
+        <a href="{% url 'order_history' %}">📜 My Orders</a> |
+        <a href="#" onclick="openModal('logout-confirm-modal')">Logout</a>
+      {% else %}
+        <a href="#" onclick="openModal('login-modal')">Login</a>
+        <a href="#" onclick="openModal('signup-modal')">Sign Up</a>
+      {% endif %}
+    </div>
+    <h1>Online Food Ordering System</h1>
+    <p>Order your favorite meals from your favorite restaurants.</p>
+  </div>
+
+  <!-- Filters -->
+  <div class="main-content">
+    <div class="search-filter">
+      <form method="get" id="filter-form">
+        <input type="text" name="search" placeholder="Search restaurants or food..." value="{{ search }}">
+
+        <select name="budget">
+          <option value="">All Budgets</option>
+          <option value="Low" {% if budget == "Low" %}selected{% endif %}>Low</option>
+          <option value="Medium" {% if budget == "Medium" %}selected{% endif %}>Medium</option>
+          <option value="High" {% if budget == "High" %}selected{% endif %}>High</option>
+        </select>
+
+        <select name="food_type">
+          <option value="">All Types</option>
+          <option value="Veg" {% if food_type == "Veg" %}selected{% endif %}>Veg</option>
+          <option value="Non-Veg" {% if food_type == "Non-Veg" %}selected{% endif %}>Non-Veg</option>
+        </select>
+
+        <select name="sort_by">
+          <option value="">Sort By</option>
+          <option value="rating" {% if sort_by == "rating" %}selected{% endif %}>Rating (High → Low)</option>
+          <option value="price_asc" {% if sort_by == "price_asc" %}selected{% endif %}>Price (Low → High)</option>
+          <option value="price_desc" {% if sort_by == "price_desc" %}selected{% endif %}>Price (High → Low)</option>
+        </select>
+
+        <div style="flex-basis: 100%; display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px;">
+          {% for cat in categories %}
+            <label style="background: #e0f0ff; padding: 6px 12px; border-radius: 20px; cursor: pointer;">
+              <input type="checkbox" name="category" value="{{ cat }}" {% if cat in selected_categories %}checked{% endif %} style="margin-right: 6px;">
+              {{ cat }}
+            </label>
+          {% endfor %}
+        </div>
+
+        <button type="submit">Apply</button>
+        <a href="{% url 'home' %}" style="padding: 10px 20px; background: #ccc; color: #333; border-radius: 8px; text-decoration: none;">Clear</a>
+      </form>
+    </div>
+
+    {% if restaurants %}
+      <div class="card-container">
+        {% for r in restaurants %}
+          <div class="restaurant-card">
+            {% if r.image %}
+  <img src="{{ r.image.url }}" alt="{{ r.name }}" style="width: 100%; height: 140px; object-fit: cover; border-radius: 8px 8px 0 0; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+
+{% else %}
+  <img src="{% static 'images/placeholder.png' %}" alt="No Image" style="width: 100%; height: 200px; object-fit: cover; border-radius: 10px;">
+{% endif %}
+
+            <h3><a href="{% url 'restaurant_detail' r.pk %}">{{ r.name }}</a></h3>
+            <p>📍 {{ r.address }}</p>
+            <p>⭐ {{ r.rating }} | 💸 {{ r.budget_range }}</p>
+
+            {% if r.filtered_items %}
+              <div style="margin-top: 10px;">
+                <strong>Available Items:</strong>
+                <ul style="padding-left: 20px;">
+                  {% for item in r.filtered_items %}
+                    <li style="margin-bottom: 8px;">
+                      <span class="{% if search %}highlighted{% endif %}">{{ item.name }}</span> - ₹{{ item.price }}
+                      <form class="add-to-cart-form-inline" data-item-id="{{ item.id }}" style="display: inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="add-btn">Add</button>
+                      </form>
+                    </li>
+                  {% endfor %}
+                </ul>
+              </div>
+            {% endif %}
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p>No restaurants match your search.</p>
+    {% endif %}
+  </div>
+
+  <div id="toast">✅ Item added to cart!</div>
+
+
+
+<div id="login-modal" class="modal">
+  <div class="modal-content">
+    <span class="close" onclick="closeModal('login-modal')">&times;</span>
+    <h2>Login</h2>
+    <form id="login-form" method="post" onsubmit="return validateLogin()">
+      {% csrf_token %}
+      <input type="text" name="username" id="login-username" placeholder="Username" required>
+      
+      <div class="password-wrapper">
+        <input type="password" name="password" id="login-password" placeholder="Password" required>
+        <i class="toggle-password bi bi-eye-slash" onclick="togglePassword('login-password', this)"></i>
+      </div>
+
+      <button type="submit">Login</button>
+      <p id="login-error" class="error-text"></p>
+    </form>
+  </div>
+</div>
+
+
+  <div id="signup-modal" class="modal">
+  <div class="modal-content">
+    <span class="close" onclick="closeModal('signup-modal')">&times;</span>
+    <h2>Sign Up</h2>
+    <form id="signup-form" method="post" onsubmit="return validateSignup()">
+      {% csrf_token %}
+      <input type="text" name="username" id="signup-username" placeholder="Username" required>
+      
+      <div class="password-wrapper">
+        <input type="password" name="password1" id="signup-password1" placeholder="Password" required>
+        <i class="toggle-password bi bi-eye-slash" onclick="togglePassword('signup-password1', this)"></i>
+      </div>
+      
+      <div class="password-wrapper">
+        <input type="password" name="password2" id="signup-password2" placeholder="Confirm Password" required>
+        <i class="toggle-password bi bi-eye-slash" onclick="togglePassword('signup-password2', this)"></i>
+      </div>
+
+      <button type="submit">Sign Up</button>
+      <p id="signup-error" class="error-text"></p>
+    </form>
+  </div>
+</div>
+
+  <div id="logout-confirm-modal" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="closeModal('logout-confirm-modal')">&times;</span>
+      <h3>Are you sure you want to logout?</h3>
+      <form action="{% url 'logout' %}" method="post">
+        {% csrf_token %}
+        <button type="submit" style="background-color: #d9534f;">Yes, Logout</button>
+        <br>
+        <button type="button" onclick="closeModal('logout-confirm-modal')">Cancel</button>
+      </form>
+    </div>
+  </div>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    // Add to cart functionality
+    const forms = document.querySelectorAll('.add-to-cart-form-inline');
+    forms.forEach(form => {
+      form.addEventListener('submit', function (event) {
+        event.preventDefault();
+        const itemId = this.getAttribute('data-item-id');
+        const csrfToken = this.querySelector('[name=csrfmiddlewaretoken]').value;
+
+        fetch(`/ajax/add-to-cart/${itemId}/`, {
+          method: "POST",
+          headers: {
+            "X-CSRFToken": csrfToken,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({})
+        })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            showToast(data.item_name);
+            updateCartCount();
+            const btn = this.querySelector('button');
+            btn.innerText = "✅ Added!";
+            btn.disabled = true;
+          } else {
+            alert("Failed to add item.");
+          }
+        })
+        .catch(() => alert("Something went wrong"));
+      });
+    });
+
+    updateCartCount();
+  });
+
+  function showToast(itemName) {
+    const toast = document.getElementById("toast");
+    toast.innerText = `${itemName} added to cart!`;
+    toast.style.right = "20px";
+    setTimeout(() => {
+      toast.style.right = "-400px";
+    }, 2000);
+  }
+
+  function updateCartCount() {
+    fetch("/cart/count/")
+      .then(res => res.json())
+      .then(data => {
+        const countEl = document.getElementById("cart-count");
+        if (countEl) countEl.textContent = data.count;
+      });
+  }
+
+  function openModal(id) {
+    document.getElementById(id).style.display = "flex";
+  }
+
+  function closeModal(id) {
+    document.getElementById(id).style.display = "none";
+  }
+
+  // ✅ AJAX Login
+  document.getElementById('login-form')?.addEventListener('submit', function (e) {
+    e.preventDefault();
+    const form = e.target;
+    const formData = new FormData(form);
+
+    fetch('/ajax/login/', {
+      method: 'POST',
+      headers: {
+         credentials: 'include', 
+        'X-CSRFToken': form.querySelector('[name=csrfmiddlewaretoken]').value,
+      },
+      body: formData
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        window.location.href = "/";  // ✅ Go to home page
+      } else {
+        document.getElementById('login-error').innerText = data.error || "Login failed.";
+      }
+    });
+  });
+
+  // ✅ AJAX Signup
+  document.getElementById('signup-form')?.addEventListener('submit', function (e) {
+    e.preventDefault();
+    const form = e.target;
+    const formData = new FormData(form);
+
+    fetch('/ajax/signup/', {
+      method: 'POST',
+      headers: {
+         credentials: 'include', 
+        'X-CSRFToken': form.querySelector('[name=csrfmiddlewaretoken]').value,
+      },
+      body: formData
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+      
+  showToast("✅ Signup successful! Please log in.");
+  setTimeout(() => {
+    closeModal('signup-modal');
+    openModal('login-modal');
+  }, 2000);
+
+ // ✅ Go to home page
+      } else {
+        document.getElementById('signup-error').innerText = data.error || "Signup failed.";
+      }
+    });
+  });
+
+function togglePassword(fieldId, icon) {
+  const input = document.getElementById(fieldId);
+  if (input.type === "password") {
+    input.type = "text";
+    icon.classList.remove("bi-eye-slash");
+    icon.classList.add("bi-eye");
+  } else {
+    input.type = "password";
+    icon.classList.remove("bi-eye");
+    icon.classList.add("bi-eye-slash");
+  }
+}
+
+function validateLogin() {
+  const username = document.getElementById("login-username").value.trim();
+  const password = document.getElementById("login-password").value.trim();
+  const errorEl = document.getElementById("login-error");
+
+  if (!username || !password) {
+    errorEl.innerText = "All fields are required.";
+    return false;
+  }
+
+  if (username.length < 3) {
+    errorEl.innerText = "Username must be at least 3 characters.";
+    return false;
+  }
+
+  return true;
+}
+
+function validateSignup() {
+  const username = document.getElementById("signup-username").value.trim();
+  const password1 = document.getElementById("signup-password1").value.trim();
+  const password2 = document.getElementById("signup-password2").value.trim();
+  const errorEl = document.getElementById("signup-error");
+
+  if (!username || !password1 || !password2) {
+    errorEl.innerText = "All fields are required.";
+    return false;
+  }
+
+  if (username.length < 3) {
+    errorEl.innerText = "Username must be at least 3 characters.";
+    return false;
+  }
+
+  if (password1.length < 6) {
+    errorEl.innerText = "Password must be at least 6 characters.";
+    return false;
+  }
+
+  if (password1 !== password2) {
+    errorEl.innerText = "Passwords do not match.";
+    return false;
+  }
+
+  return true;
+}
+</script>
+  
+</body>
+</html>

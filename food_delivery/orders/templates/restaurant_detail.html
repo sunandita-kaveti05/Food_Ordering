@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>{{ restaurant.name }} - Menu</title>
+  <style>
+    :root {
+      --primary: #0077cc;
+      --bg-light: #f5f5f5;
+      --bg-white: #ffffff;
+      --text-dark: #333;
+      --card-hover: #e0f0ff;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      padding: 40px;
+      background-color: var(--bg-light);
+    }
+
+    a {
+      color: var(--primary);
+      text-decoration: none;
+    }
+
+    .header {
+      background: var(--bg-white);
+      padding: 20px;
+      border-radius: 10px;
+      margin-bottom: 30px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .filter-form {
+      margin-bottom: 30px;
+      background-color: var(--bg-white);
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .menu-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 25px;
+    }
+
+    .food-card {
+      background-color: var(--bg-white);
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .food-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .food-card img {
+      width: 100%;
+      height: 180px;
+      object-fit: cover;
+      border-bottom: 1px solid #eee;
+    }
+
+    .food-card-content {
+      padding: 15px;
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .food-card h3 {
+      font-size: 1.4em;
+      margin-top: 0;
+      margin-bottom: 10px;
+      color: var(--text-dark);
+    }
+
+    .food-card p {
+      font-size: 0.9em;
+      color: #666;
+      margin-bottom: 10px;
+      flex-grow: 1;
+    }
+
+    .food-card-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 15px;
+    }
+
+    .food-price {
+      font-size: 1.2em;
+      font-weight: bold;
+      color: var(--primary);
+    }
+
+    .add-to-cart-btn {
+      background-color: var(--primary);
+      color: white;
+      padding: 10px 15px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 0.9em;
+      transition: background-color 0.3s ease;
+    }
+
+    .add-to-cart-btn:hover {
+      background-color: #005fa3;
+    }
+
+    .cart-link {
+      display: block;
+      margin-top: 30px;
+      text-align: center;
+      font-size: 1.1em;
+      font-weight: bold;
+    }
+
+    .filter-form label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+      color: var(--text-dark);
+    }
+
+    .filter-form input[type="text"],
+    .filter-form select,
+    .filter-form input[type="number"] {
+      width: calc(100% - 20px);
+      padding: 10px;
+      margin-bottom: 15px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      box-sizing: border-box;
+    }
+
+    .filter-form button {
+      background-color: var(--primary);
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 1em;
+      transition: background-color 0.3s ease;
+    }
+
+    .filter-form button:hover {
+      background-color: #005fa3;
+    }
+
+    .price-range-group {
+      display: flex;
+      gap: 10px;
+    }
+
+    .price-range-group input {
+      flex: 1;
+    }
+
+    .checkbox-group label {
+        display: inline-block;
+        margin-right: 15px;
+        font-weight: normal;
+    }
+
+    #toast {
+      visibility: hidden;
+      min-width: 250px;
+      background-color: #333;
+      color: #fff;
+      text-align: center;
+      border-radius: 2px;
+      padding: 16px;
+      position: fixed;
+      z-index: 1;
+      right: -400px;
+      bottom: 30px;
+      font-size: 17px;
+      transition: right 0.5s ease-in-out;
+    }
+
+    #toast.show {
+      visibility: visible;
+      right: 20px;
+    }
+
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>{{ restaurant.name }} Menu</h1>
+    <p>{{ restaurant.address }} | Rating: {{ restaurant.rating }}</p>
+    <a href="{% url 'home' %}">← Back to Restaurants</a> | 
+    <a href="{% url 'view_cart' %}">🛒 View Cart</a>
+    <span id="cart-count-display" style="float: right; font-weight: bold;">Cart: <span id="cart-count">0</span> items</span>
+  </div>
+
+  <div class="filter-form">
+    <form method="get" action="{% url 'restaurant_detail' restaurant.pk %}">
+      <label for="food_search">Search Food Item:</label>
+      <input type="text" id="food_search" name="food_search" value="{{ search_query }}">
+
+      <label for="type">Food Type:</label>
+      <select id="type" name="type">
+        <option value="">All</option>
+        <option value="Veg" {% if food_type == 'Veg' %}selected{% endif %}>Veg</option>
+        <option value="Non-Veg" {% if food_type == 'Non-Veg' %}selected{% endif %}>Non-Veg</option>
+      </select>
+
+      <label>Categories:</label>
+      <div class="checkbox-group">
+          {% for category_name in categories %}
+              <label>
+                  <input type="checkbox" name="category" value="{{ category_name }}"
+                  {% if category_name in selected_categories %}checked{% endif %}>
+                  {{ category_name }}
+              </label>
+          {% endfor %}
+      </div>
+      <br>
+
+      <label for="sort">Sort By:</label>
+      <select id="sort" name="sort">
+        <option value="">Default</option>
+        <option value="price" {% if sort_by == 'price' %}selected{% endif %}>Price</option>
+        <option value="rating" {% if sort_by == 'rating' %}selected{% endif %}>Rating</option>
+      </select>
+
+      <label>Price Range:</label>
+      <div class="price-range-group">
+        <input type="number" name="min_price" placeholder="Min Price" value="{{ price_min }}">
+        <input type="number" name="max_price" placeholder="Max Price" value="{{ price_max }}">
+      </div>
+      <button type="submit">Apply Filters</button>
+    </form>
+  </div>
+
+  <div class="menu-grid">
+    {% for item in food_items %}
+      <div class="food-card">
+        {% if item.image %}
+          <img src="{{ item.image.url }}" alt="{{ item.name }}">
+        {% endif %}
+        <div class="food-card-content">
+          <h3>{{ item.name }}</h3>
+          <p>{{ item.description }}</p>
+          <div class="food-card-footer">
+            <span class="food-price">₹{{ item.price }}</span>
+            <form class="add-to-cart-form" data-item-id="{{ item.id }}">
+              {% csrf_token %}
+              <button type="submit" class="add-to-cart-btn">Add to Cart</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    {% empty %}
+      <p>No food items found for this restaurant with the selected filters.</p>
+    {% endfor %}
+  </div>
+
+  <div id="toast">Item added to cart!</div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const forms = document.querySelectorAll('.add-to-cart-form');
+
+      forms.forEach(form => {
+        form.addEventListener('submit', function (event) {
+          event.preventDefault();
+          const itemId = this.getAttribute('data-item-id');
+          addToCartAjax(itemId, this);
+        });
+      });
+
+      updateCartCount(); // Initial cart count load
+    });
+
+    function getCSRFToken(form) {
+      const tokenInput = form.querySelector('[name=csrfmiddlewaretoken]');
+      return tokenInput ? tokenInput.value : '';
+    }
+
+    function addToCartAjax(itemId, form) {
+      fetch(`/ajax/add-to-cart/${itemId}/`, {
+        method: "POST",
+        headers: {
+          "X-CSRFToken": getCSRFToken(form)
+        }
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          showToast(data.item_name);
+          updateCartCount();
+
+          const btn = form.querySelector('button');
+          btn.innerText = "✅ Added!";
+          btn.style.backgroundColor = "#28a745";
+          btn.disabled = true;
+        } else {
+          alert("Failed to add item.");
+        }
+      })
+      .catch(() => alert("Something went wrong"));
+    }
+
+    function updateCartCount() {
+      fetch('/cart/count/')
+        .then(response => response.json())
+        .then(data => {
+          document.getElementById('cart-count').innerText = data.count;
+        });
+    }
+
+    function showToast(itemName) {
+      const toast = document.getElementById("toast");
+      toast.innerText = `${itemName} added to cart!`;
+      toast.classList.add("show");
+
+      setTimeout(() => {
+        toast.classList.remove("show");
+      }, 2000);
+    }
+  </script>
+</body>
+</html>
